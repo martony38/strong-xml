@@ -1,15 +1,13 @@
-use jetscii::{bytes, BytesConst};
-use lazy_static::lazy_static;
 use std::borrow::Cow;
 
-pub fn xml_escape(raw: &str) -> Cow<'_, str> {
-    lazy_static! {
-        static ref ESCAPE_BYTES: BytesConst = bytes!(b'<', b'>', b'&', b'\'', b'"');
-    }
+fn escape_chars(c: char) -> bool {
+    c == '<' || c == '>' || c == '&' || c == '\'' || c == '"'
+}
 
+pub fn xml_escape(raw: &str) -> Cow<'_, str> {
     let bytes = raw.as_bytes();
 
-    if let Some(off) = ESCAPE_BYTES.find(bytes) {
+    if let Some(off) = raw.find(escape_chars) {
         let mut result = String::with_capacity(raw.len());
 
         result.push_str(&raw[0..off]);
@@ -25,7 +23,7 @@ pub fn xml_escape(raw: &str) -> Cow<'_, str> {
             _ => unreachable!(),
         }
 
-        while let Some(off) = ESCAPE_BYTES.find(&bytes[pos..]) {
+        while let Some(off) = raw[pos..].find(escape_chars) {
             result.push_str(&raw[pos..pos + off]);
 
             pos += off + 1;
